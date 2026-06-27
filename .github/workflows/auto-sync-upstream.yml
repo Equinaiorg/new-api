@@ -1,0 +1,17 @@
+name: Auto Fetch Upstream
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  fetch-upstream:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sync with Upstream
+        env:
+          # 必须使用 PAT，才能级联触发 sync2b.yml 工作流
+          GITHUB_TOKEN: ${{ secrets.SYNC_TOKEN }} 
+        run: |
+          gh repo sync ${{ github.repository }} --branch main
