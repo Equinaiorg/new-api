@@ -30,8 +30,7 @@ jobs:
           # 关键步骤：仅仅从 Git 暂存区中删除本同步文件
           # .github 文件夹下的其他文件（如 issue 模板、其他 yml 脚本）会被完好保留
           # --ignore-unmatch 防止文件不存在时抛错中断 Action
-          git rm --ignore-unmatch .github/workflows/sync2b.yml
-          git rm --ignore-unmatch .github/workflows/auto-sync-upstream.yml
+          git rm -r --ignore-unmatch .github/
           
           # 提交这次删除（只发生在 Action 运行的临时容器中，不影响 A 仓库本身）
           git commit -m "chore: exclude sync workflow for destination repo" || true
