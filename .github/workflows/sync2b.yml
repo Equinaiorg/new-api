@@ -1,0 +1,42 @@
+name: Sync to Repo B
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  repo-sync:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. 检出 A 仓库的代码（包含所有历史记录和分支结构）
+      - name: Checkout A Repo
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      # 2. 精准剔除 sync.yml 文件并强制推送到 B 仓库
+      - name: Push to Repo B
+        env:
+          # ⚠️请修改为你的真实 GitHub 用户名和 B 仓库名
+          DEST_REPO: "Equinaiorg/FR" 
+          SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
+        run: |
+          # 配置临时 Git 用户信息
+          git config --global user.name "github-sync[bot]"
+          git config --global user.email "github-sync[bot]@users.noreply.github.com"
+          
+          # 关键步骤：仅仅从 Git 暂存区中删除本同步文件
+          # .github 文件夹下的其他文件（如 issue 模板、其他 yml 脚本）会被完好保留
+          # --ignore-unmatch 防止文件不存在时抛错中断 Action
+          git rm --ignore-unmatch .github/workflows/sync2b.yml
+          
+          # 提交这次删除（只发生在 Action 运行的临时容器中，不影响 A 仓库本身）
+          git commit -m "chore: exclude sync workflow for destination repo" || true
+          
+          # 添加 B 仓库作为远程源，并使用 Token 进行身份验证
+          git remote add destination "https://${SYNC_TOKEN}@github.com/${DEST_REPO}.git"
+          
+          # 强制推送到 B 仓库的 main 分支
+          git push destination main:main --force
